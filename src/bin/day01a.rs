@@ -1,31 +1,30 @@
+use std::io::{stdin, Read};
+
 use color_eyre::eyre::{eyre, Result};
 
-static INPUT: &str = include_str!("../../input/day01.real");
-
 fn main() -> Result<()> {
+    let mut input = String::new();
+    stdin().read_to_string(&mut input)?;
+
     let r = regex::Regex::new(r#"(?<left>\d).*(?<right>\d)|(?<only>\d)"#)?;
 
     let mut sum: u128 = 0;
 
-    for line in INPUT.lines() {
+    for line in input.lines() {
         let caps = r.captures(line).ok_or(eyre!("Parsing error"))?;
 
         let calibration_value = if let Some(only) = caps.name("only") {
-            let mut s = String::new();
-            s.push_str(only.as_str());
-            s.push_str(only.as_str());
-            s.to_string()
+            only.as_str().repeat(2)
+        } else if let (Some(left), Some(right)) = (caps.name("left"), caps.name("right")) {
+            left.as_str().to_owned() + right.as_str()
         } else {
-            let left = caps.name("left").expect("malformed input");
-            let right = caps.name("right").expect("malformed input");
-
-            let mut s = String::new();
-            s.push_str(left.as_str());
-            s.push_str(right.as_str());
-            s
+            unreachable!()
         };
 
-        let calibration_value: u128 = calibration_value.parse().expect("integer parsing error");
+        let calibration_value: u128 = calibration_value
+            .parse()
+            .map_err(|_| eyre!("integer parsing error"))?;
+
         sum += calibration_value;
     }
 
