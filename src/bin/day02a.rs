@@ -16,33 +16,38 @@ struct Game {
 }
 
 fn parse_input(input: &str) -> Result<Vec<Game>> {
-    let mut games = vec![];
-
-    for line in input.lines() {
-        let (prefix, rest) = line.split_once(": ").unwrap();
-        let id = prefix.split_once(' ').unwrap().1.parse()?;
-
-        let mut game = Game { id, rounds: vec![] };
-
-        for round in rest.split("; ") {
-            let mut counts = CubeCounts { red: 0, green: 0, blue: 0 };
-            for pairing in  round.split(", ") {
-                let (count, color) = pairing.split_once(' ').unwrap();
-                let count: u32 = count.parse()?;
-
-                match color {
-                    "red" => {counts.red += count},
-                    "green" => {counts.green += count},
-                    "blue" => {counts.blue += count},
-                    _ => panic!("unrecognized color"),
-                }
-            }
-            game.rounds.push(counts);
-        }
-        games.push(game);
-    }
-
-    Ok(games)
+    input
+        .lines()
+        .into_iter()
+        .map(|line| -> Result<Game> {
+            let (prefix, rest) = line.split_once(": ").unwrap();
+            let id: u32 = prefix.split_once(' ').unwrap().1.parse()?;
+            Ok(Game {
+                id,
+                rounds: rest
+                    .split("; ")
+                    .map(|round| -> Result<CubeCounts> {
+                        let mut counts = CubeCounts {
+                            red: 0,
+                            green: 0,
+                            blue: 0,
+                        };
+                        for pairing in round.split(", ") {
+                            let (count, color) = pairing.split_once(' ').unwrap();
+                            let count: u32 = count.parse()?;
+                            match color {
+                                "red" => counts.red += count,
+                                "green" => counts.green += count,
+                                "blue" => counts.blue += count,
+                                _ => panic!("unrecognized color"),
+                            }
+                        }
+                        Ok(counts)
+                    })
+                    .collect::<Result<Vec<CubeCounts>>>()?,
+            })
+        })
+        .collect()
 }
 
 fn main() -> Result<()> {
