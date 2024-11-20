@@ -39,7 +39,7 @@ fn main() -> Result<()> {
                 let mut end = x;
                 let mut star_pos_opt = None;
                 while end < grid[0].len() && grid[y][end].is_ascii_digit() {
-                    if let None = star_pos_opt {
+                    if star_pos_opt.is_none() {
                         star_pos_opt = star_adjacent(&grid, y as i32, end as i32);
                     }
                     end += 1;
