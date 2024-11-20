@@ -20,7 +20,6 @@ impl CubeCounts {
 
 #[derive(Debug)]
 struct Game {
-    id: u32,
     rounds: Vec<CubeCounts>,
 }
 
@@ -28,12 +27,11 @@ fn parse_input(input: &str) -> Result<Vec<Game>> {
     let mut games = vec![];
 
     for line in input.lines() {
-        let (prefix, rest) = line.split_once(": ").unwrap();
-        let id = prefix.split_once(' ').unwrap().1.parse()?;
+        let round_str = line.split_once(": ").unwrap().1;
 
-        let mut game = Game { id, rounds: vec![] };
+        let mut game = Game { rounds: vec![] };
 
-        for round in rest.split("; ") {
+        for round in round_str.split("; ") {
             let mut counts = CubeCounts {
                 red: 0,
                 green: 0,
