@@ -1,10 +1,13 @@
-use std::io::{stdin, Read};
+use std::{
+    collections::HashMap,
+    io::{stdin, Read},
+};
 
 use color_eyre::eyre::Result;
 
 type Grid = Vec<Vec<char>>;
 
-fn is_symbol_adjacent(grid: &Grid, row_idx: i32, col_idx: i32) -> bool {
+fn star_adjacent(grid: &Grid, row_idx: i32, col_idx: i32) -> Option<(usize, usize)> {
     let rs = [-1, -1, -1, 0, 0, 1, 1, 1];
     let cs = [-1, 0, 1, -1, 1, -1, 0, 1];
 
@@ -12,13 +15,12 @@ fn is_symbol_adjacent(grid: &Grid, row_idx: i32, col_idx: i32) -> bool {
         let r = (row_idx + r).clamp(0, (grid.len() - 1) as i32);
         let c = (col_idx + c).clamp(0, (grid[0].len() - 1) as i32);
 
-        let ch = grid[r as usize][c as usize];
-        if ch != '.' && !ch.is_ascii_digit() {
-            return true;
+        if grid[r as usize][c as usize] == '*' {
+            return Some((r as usize, c as usize));
         }
     }
 
-    false
+    None
 }
 
 fn main() -> Result<()> {
@@ -26,7 +28,7 @@ fn main() -> Result<()> {
     stdin().read_to_string(&mut input)?;
 
     let grid: Grid = input.lines().map(|line| line.chars().collect()).collect();
-    let mut ans = 0;
+    let mut gears: HashMap<(usize, usize), (i32, i32)> = HashMap::new();
 
     for y in 0..grid.len() {
         let mut x = 0;
@@ -35,16 +37,19 @@ fn main() -> Result<()> {
 
             if c.is_ascii_digit() {
                 let mut end = x;
-                let mut is_part_number = false;
+                let mut star_pos_opt = None;
                 while end < grid[0].len() && grid[y][end].is_ascii_digit() {
-                    if !is_part_number {
-                        is_part_number = is_symbol_adjacent(&grid, y as i32, end as i32);
+                    if let None = star_pos_opt {
+                        star_pos_opt = star_adjacent(&grid, y as i32, end as i32);
                     }
                     end += 1;
                 }
 
-                if is_part_number {
-                    ans += grid[y][x..end].iter().collect::<String>().parse::<i32>()?;
+                if let Some(star_pos) = star_pos_opt {
+                    let entry = gears.entry(star_pos);
+                    let val = grid[y][x..end].iter().collect::<String>().parse::<i32>()?;
+
+                    entry.and_modify(|e| e.1 = val).or_insert((val, 0));
                 }
 
                 x = end;
@@ -54,7 +59,9 @@ fn main() -> Result<()> {
         }
     }
 
-    println!("{}", ans);
+    let ans = gears.iter().fold(0, |acc, e| acc + (e.1 .0 * e.1 .1));
+
+    println!("{}", &ans);
 
     Ok(())
 }
