@@ -15,14 +15,15 @@ fn parse_numbers(s: &str) -> Result<HashSet<i32>> {
 // `card_values` must be passed as reference as it is borrowed multiple times
 // here
 #[allow(clippy::needless_borrow)]
-fn backtrack(id: i32, card_values: &HashMap<i32, i32>, acc: &mut Vec<i32>) {
+fn backtrack(id: i32, card_values: &HashMap<i32, i32>) -> i32 {
+    let mut res = 1;
     let value = card_values.get(&id).expect("not in card_values");
 
-    acc.push(id);
-
     for i in (id + 1)..=(id + value) {
-        backtrack(i, &card_values, acc);
+        res += backtrack(i, &card_values);
     }
+
+    res
 }
 
 fn main() -> Result<()> {
@@ -45,12 +46,12 @@ fn main() -> Result<()> {
         card_values.insert(id, num_matching_numbers);
     }
 
-    let mut acc = vec![];
+    let mut ans = 0;
     for id in 1..=card_values.len() {
-        backtrack(id as i32, &card_values, &mut acc);
+        ans += backtrack(id as i32, &card_values);
     }
 
-    println!("{}", &acc.len());
+    println!("{}", ans);
 
     Ok(())
 }
